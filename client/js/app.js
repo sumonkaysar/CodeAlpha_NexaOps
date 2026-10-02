@@ -130,13 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("task-form")
     ?.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const values = Object.fromEntries(new FormData(event.currentTarget));
+      const form = event.currentTarget;
+
+      const values = Object.fromEntries(new FormData(form));
       if (!values.assignee) values.assignee = null;
       await request("/tasks", {
         method: "POST",
         body: JSON.stringify({ ...values, project: activeProject }),
       });
-      event.currentTarget.reset();
+      form.reset();
       taskDialog.close();
       refreshTasks();
     });
