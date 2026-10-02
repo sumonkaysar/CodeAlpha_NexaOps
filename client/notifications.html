@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f4ef" />
+    <meta
+      name="description"
+      content="Review your NexaOps project and task notifications."
+    />
+    <title>Notifications | NexaOps</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html">Nexa<span>Ops</span></a>
+      <div class="account" id="account-actions">
+        <a href="login.html">Sign in</a>
+        <a class="button" href="register.html">Create account</a>
+      </div>
+    </header>
+    <main class="notifications-page">
+      <div class="notifications-heading">
+        <div>
+          <p class="eyebrow">YOUR WORKSPACE</p>
+          <h1>Notifications</h1>
+          <p class="subheading">
+            Project and task updates from your team.
+          </p>
+        </div>
+        <a class="quiet-button" href="index.html">Back to projects</a>
+      </div>
+      <div
+        class="notifications-list"
+        id="notifications-list"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <p class="empty-state">Loading notifications...</p>
+      </div>
+    </main>
+    <div class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

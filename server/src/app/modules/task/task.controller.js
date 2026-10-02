@@ -48,21 +48,30 @@ exports.create = async (req, res) => {
 
   const result = await task.populate("assignee", "name email");
 
-  req.app.get("io").to(`project:${projectId}`).emit("task:created", result);
+  const io = req.app.get("io");
+  io.to(`project:${projectId}`).emit("task:created", result);
 
-  if (assignee && String(assignee) !== req.user.id) {
-    const Notification = require("../notification/notification.model");
-    const notification = await Notification.create({
-      recipient: assignee,
-      project: projectId,
-      task: task.id,
-      message: `You were assigned to ${task.title}`,
+  const NotificationService = require("../notification/notification.service");
+  const otherMembers = project.members
+    .map(String)
+    .filter((memberId) => memberId !== String(assignee));
+  await NotificationService.createForUsers({
+    recipientIds: otherMembers,
+    actorId: req.user.id,
+    projectId,
+    taskId: task.id,
+    message: `${req.user.name} created task "${task.title}" in ${project.name}`,
+    io,
+  });
+  if (assignee) {
+    await NotificationService.createForUsers({
+      recipientIds: [assignee],
+      actorId: req.user.id,
+      projectId,
+      taskId: task.id,
+      message: `You were assigned to "${task.title}" in ${project.name}`,
+      io,
     });
-
-    req.app
-      .get("io")
-      .to(`user:${assignee}`)
-      .emit("notification:new", notification);
   }
 
   res.status(201).json(result);
@@ -76,6 +85,8 @@ exports.update = async (req, res) => {
   if (!task) throw fail("Task not found", 404);
 
   const project = await getAccessibleProject(task.project, req.user.id);
+  const previousAssignee = task.assignee ? String(task.assignee) : null;
+  const previousStatus = task.status;
 
   const updates = {};
   for (const field of [
@@ -107,9 +118,61 @@ exports.update = async (req, res) => {
 
   await task.save();
 
+  const io = req.app.get("io");
+  const newAssignee = task.assignee ? String(task.assignee) : null;
   const result = await task.populate("assignee", "name email");
+  io.to(`project:${project.id}`).emit("task:updated", result);
 
-  req.app.get("io").to(`project:${project.id}`).emit("task:updated", result);
+  const NotificationService = require("../notification/notification.service");
+  if (newAssignee && newAssignee !== previousAssignee) {
+    await NotificationService.createForUsers({
+      recipientIds: [newAssignee],
+      actorId: req.user.id,
+      projectId: project.id,
+      taskId: task.id,
+      message: `You were assigned to "${task.title}" in ${project.name}`,
+      io,
+    });
+  }
+  if (
+    previousAssignee &&
+    previousAssignee !== newAssignee &&
+    previousAssignee !== req.user.id
+  ) {
+    await NotificationService.createForUsers({
+      recipientIds: [previousAssignee],
+      actorId: req.user.id,
+      projectId: project.id,
+      taskId: task.id,
+      message: `You are no longer assigned to "${task.title}" in ${project.name}`,
+      io,
+    });
+  }
+
+  if (updates.status !== undefined && updates.status !== previousStatus) {
+    await NotificationService.createForUsers({
+      recipientIds: project.members,
+      actorId: req.user.id,
+      projectId: project.id,
+      taskId: task.id,
+      message: `${req.user.name} moved "${task.title}" to ${task.status.replace("-", " ")}`,
+      io,
+    });
+  }
+
+  const detailsChanged = ["title", "description", "priority", "dueDate"].some(
+    (field) => updates[field] !== undefined,
+  );
+  if (detailsChanged) {
+    await NotificationService.createForUsers({
+      recipientIds: project.members,
+      actorId: req.user.id,
+      projectId: project.id,
+      taskId: task.id,
+      message: `${req.user.name} updated task "${task.title}" in ${project.name}`,
+      io,
+    });
+  }
 
   res.json(result);
 };
@@ -125,10 +188,16 @@ exports.remove = async (req, res) => {
 
   await task.deleteOne();
 
-  req.app
-    .get("io")
-    .to(`project:${project.id}`)
-    .emit("task:deleted", { taskId: task.id });
+  const io = req.app.get("io");
+  io.to(`project:${project.id}`).emit("task:deleted", { taskId: task.id });
+  const NotificationService = require("../notification/notification.service");
+  await NotificationService.createForUsers({
+    recipientIds: project.members,
+    actorId: req.user.id,
+    projectId: project.id,
+    message: `${req.user.name} deleted task "${task.title}" from ${project.name}`,
+    io,
+  });
 
   res.status(204).end();
 };

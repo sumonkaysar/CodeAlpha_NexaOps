@@ -20,7 +20,7 @@ exports.create = async (req, res) => {
   const task = await Task.findById(req.params.taskId);
   if (!task) throw fail("Task not found", 404);
 
-  await getAccessibleProject(task.project, req.user.id);
+  const project = await getAccessibleProject(task.project, req.user.id);
 
   if (typeof req.body.body !== "string" || !req.body.body.trim())
     throw fail("Comment cannot be empty");
@@ -37,6 +37,16 @@ exports.create = async (req, res) => {
     .get("io")
     .to(`project:${task.project}`)
     .emit("comment:created", result);
+
+  const NotificationService = require("../notification/notification.service");
+  await NotificationService.createForUsers({
+    recipientIds: project.members,
+    actorId: req.user.id,
+    projectId: project.id,
+    taskId: task.id,
+    message: `${req.user.name} commented on "${task.title}" in ${project.name}`,
+    io: req.app.get("io"),
+  });
 
   res.status(201).json(result);
 };

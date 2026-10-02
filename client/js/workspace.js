@@ -131,27 +131,6 @@ async function refreshTasks() {
     );
 }
 
-async function loadNotifications() {
-  const panel = document.getElementById("notification-panel");
-  const notifications = await request("/notifications");
-
-  panel.innerHTML = notifications.length
-    ? `
-      <p class="eyebrow">RECENT ACTIVITY</p>
-      ${notifications
-        .map(
-          (item) => `
-            <p>
-              ${escapeHtml(item.message)}
-              <time>${new Date(item.createdAt).toLocaleString()}</time>
-            </p>
-          `,
-        )
-        .join("")}
-    `
-    : '<p class="empty-state">No notifications yet.</p>';
-}
-
 async function openComments(taskId) {
   activeTask = taskId;
   const panel = document.getElementById("comments-panel");

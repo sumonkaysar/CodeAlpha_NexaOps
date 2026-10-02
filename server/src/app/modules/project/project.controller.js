@@ -41,6 +41,7 @@ exports.update = async (req, res) => {
     throw fail("Only the project owner can update it", 403);
 
   const updates = {};
+  const previousMembers = project.members.map(String);
 
   if (req.body.name !== undefined) {
     if (typeof req.body.name !== "string" || !req.body.name.trim())
@@ -62,6 +63,42 @@ exports.update = async (req, res) => {
   Object.assign(project, updates);
   await project.save();
 
+  const io = req.app.get("io");
+  const addedMembers = (updates.members || [])
+    .filter((memberId) => !previousMembers.includes(memberId))
+    .filter((memberId) => memberId !== req.user.id);
+  const removedMembers = previousMembers.filter(
+    (memberId) =>
+      updates.members &&
+      !updates.members.includes(memberId) &&
+      memberId !== req.user.id,
+  );
+
+  const NotificationService = require("../notification/notification.service");
+  await NotificationService.createForUsers({
+    recipientIds: addedMembers,
+    actorId: req.user.id,
+    projectId: project.id,
+    message: `${req.user.name} added you to ${project.name}`,
+    io,
+  });
+  await NotificationService.createForUsers({
+    recipientIds: removedMembers,
+    actorId: req.user.id,
+    projectId: project.id,
+    message: `You were removed from ${project.name}`,
+    io,
+  });
+  if (req.body.name !== undefined || req.body.description !== undefined) {
+    await NotificationService.createForUsers({
+      recipientIds: project.members,
+      actorId: req.user.id,
+      projectId: project.id,
+      message: `${req.user.name} updated project details for ${project.name}`,
+      io,
+    });
+  }
+
   req.app
     .get("io")
     .to(`project:${project.id}`)
@@ -76,12 +113,22 @@ exports.remove = async (req, res) => {
   if (String(project.owner) !== req.user.id)
     throw fail("Only the project owner can delete it", 403);
 
+  const memberIds = project.members.map(String);
   await project.deleteOne();
 
-  req.app
-    .get("io")
-    .to(`project:${project.id}`)
-    .emit("project:deleted", { projectId: project.id });
+  const io = req.app.get("io");
+  const NotificationService = require("../notification/notification.service");
+  await NotificationService.createForUsers({
+    recipientIds: memberIds,
+    actorId: req.user.id,
+    projectId: project.id,
+    message: `${req.user.name} deleted project ${project.name}`,
+    io,
+  });
+
+  io.to(`project:${project.id}`).emit("project:deleted", {
+    projectId: project.id,
+  });
 
   res.status(204).end();
 };
@@ -99,9 +146,21 @@ exports.addMember = async (req, res) => {
   });
 
   if (!member) throw fail("No account found for that email", 404);
-  if (!project.members.some((userId) => String(userId) === member.id)) {
+  const alreadyMember = project.members.some(
+    (userId) => String(userId) === member.id,
+  );
+  if (!alreadyMember) {
     project.members.push(member.id);
     await project.save();
+
+    const NotificationService = require("../notification/notification.service");
+    await NotificationService.createForUsers({
+      recipientIds: [member.id],
+      actorId: req.user.id,
+      projectId: project.id,
+      message: `${req.user.name} invited you to ${project.name}`,
+      io: req.app.get("io"),
+    });
   }
 
   const result = await project.populate("members", "name email");

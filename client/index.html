@@ -42,12 +42,6 @@
             </p>
           </div>
         </div>
-        <section
-          id="notification-panel"
-          class="notification-panel"
-          hidden
-          aria-live="polite"
-        ></section>
         <div id="project-list" class="project-list" aria-live="polite">
           <p class="empty-state">Sign in to load your projects.</p>
         </div>
@@ -114,6 +108,32 @@
         <div class="dialog-actions">
           <button class="quiet-button" type="button" data-close>Cancel</button
           ><button class="button" type="submit">Create task</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="invite-dialog" aria-labelledby="invite-dialog-title">
+      <form id="invite-form">
+        <h2 id="invite-dialog-title">Invite a team member</h2>
+        <p class="dialog-description">
+          Enter the email address of an existing NexaOps user to add them to
+          this project.
+        </p>
+        <label for="invite-email">Member email</label>
+        <input
+          id="invite-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          placeholder="name@example.com"
+          required
+        />
+        <div class="dialog-actions">
+          <button class="quiet-button" type="button" data-close>
+            Cancel
+          </button>
+          <button class="button" id="invite-submit" type="submit">
+            Send invite
+          </button>
         </div>
       </form>
     </dialog>

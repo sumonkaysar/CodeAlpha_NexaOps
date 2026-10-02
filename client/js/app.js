@@ -26,11 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const token = localStorage.getItem(tokenKey);
 
-  if (token && document.getElementById("project-list")) {
+  if (token && document.getElementById("account-actions")) {
     document.getElementById("account-actions").innerHTML = `
-      <button class="quiet-button" id="notifications" type="button">
+      <a class="quiet-button" id="notifications" href="notifications.html">
         Notifications
-      </button>
+      </a>
+      ${
+        document.getElementById("project-list")
+          ? ""
+          : '<a class="quiet-button" href="index.html">Projects</a>'
+      }
       <button class="quiet-button" id="logout" type="button">
         Sign out
       </button>
@@ -41,13 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
       location.reload();
     });
 
-    loadProjects();
-    loadNotifications();
-
-    document.getElementById("notifications").addEventListener("click", () => {
-      const panel = document.getElementById("notification-panel");
-      panel.hidden = !panel.hidden;
-    });
+    if (document.getElementById("project-list")) loadProjects();
 
     if (window.io) {
       socket = window.io("https://nexaops-server.vercel.app", {
@@ -55,30 +54,33 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       socket.on("connect", () => {
-        document.getElementById("connection-state").textContent = "Live";
+        const connectionState = document.getElementById("connection-state");
+        if (connectionState) connectionState.textContent = "Live";
         document.querySelector(".presence")?.classList.add("online");
       });
 
       socket.on("disconnect", () => {
-        document.getElementById("connection-state").textContent = "Offline";
+        const connectionState = document.getElementById("connection-state");
+        if (connectionState) connectionState.textContent = "Offline";
         document.querySelector(".presence")?.classList.remove("online");
       });
 
-      ["task:created", "task:updated", "task:deleted"].forEach((eventName) =>
-        socket.on(eventName, refreshTasks),
-      );
-
-      socket.on("comment:created", (comment) => {
-        if (activeTask === comment.task) openComments(activeTask);
-      });
-
       socket.on("notification:new", (notification) => {
-        const panel = document.getElementById("notification-panel");
-        panel.hidden = false;
-        loadNotifications().catch(() => {
-          panel.textContent = notification.message;
-        });
+        showToast(notification.message);
+        document.dispatchEvent(
+          new CustomEvent("notification:new", { detail: notification }),
+        );
       });
+
+      if (document.getElementById("project-list")) {
+        ["task:created", "task:updated", "task:deleted"].forEach((eventName) =>
+          socket.on(eventName, refreshTasks),
+        );
+
+        socket.on("comment:created", (comment) => {
+          if (activeTask === comment.task) openComments(activeTask);
+        });
+      }
     }
   }
 
@@ -105,21 +107,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   const taskDialog = document.getElementById("task-dialog");
-  document
-    .getElementById("invite-member")
-    ?.addEventListener("click", async () => {
-      const email = prompt("Email address of an existing NexaOps user");
-      if (!email?.trim() || !activeProject) return;
-      try {
-        await request(`/projects/${activeProject}/members`, {
-          method: "POST",
-          body: JSON.stringify({ email: email.trim() }),
-        });
-        await openProject(activeProject);
-      } catch (error) {
-        showToast(error.message);
-      }
-    });
+  const inviteDialog = document.getElementById("invite-dialog");
+  const inviteForm = document.getElementById("invite-form");
+
+  document.getElementById("invite-member")?.addEventListener("click", () => {
+    if (!activeProject) return;
+    inviteForm.reset();
+    inviteDialog.showModal();
+    document.getElementById("invite-email").focus();
+  });
+  inviteDialog
+    ?.querySelector("[data-close]")
+    .addEventListener("click", () => inviteDialog.close());
+  inviteForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!activeProject) return;
+
+    const submitButton = document.getElementById("invite-submit");
+    const email = String(new FormData(inviteForm).get("email") || "").trim();
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
+
+    try {
+      await request(`/projects/${activeProject}/members`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      inviteDialog.close();
+      inviteForm.reset();
+      await openProject(activeProject);
+      showToast("Member added to the project");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Send invite";
+    }
+  });
   document
     .getElementById("new-task")
     ?.addEventListener("click", () => activeProject && taskDialog.showModal());

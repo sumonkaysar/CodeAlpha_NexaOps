@@ -60,6 +60,13 @@ dialog h2 {
   margin: 0;
 }
 
+.dialog-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
