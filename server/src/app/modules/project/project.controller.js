@@ -159,6 +159,7 @@ exports.addMember = async (req, res) => {
       actorId: req.user.id,
       projectId: project.id,
       message: `${req.user.name} invited you to ${project.name}`,
+      actorMessage: `You invited ${member.name} to ${project.name}`,
       io: req.app.get("io"),
     });
   }

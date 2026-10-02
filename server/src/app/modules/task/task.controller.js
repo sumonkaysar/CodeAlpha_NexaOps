@@ -70,6 +70,7 @@ exports.create = async (req, res) => {
       projectId,
       taskId: task.id,
       message: `You were assigned to "${task.title}" in ${project.name}`,
+      actorMessage: `You assigned ${result.assignee?.name || "a team member"} to "${task.title}" in ${project.name}`,
       io,
     });
   }
@@ -131,6 +132,7 @@ exports.update = async (req, res) => {
       projectId: project.id,
       taskId: task.id,
       message: `You were assigned to "${task.title}" in ${project.name}`,
+      actorMessage: `You assigned ${result.assignee?.name || "a team member"} to "${task.title}" in ${project.name}`,
       io,
     });
   }

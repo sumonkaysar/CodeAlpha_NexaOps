@@ -6,24 +6,26 @@ exports.createForUsers = async ({
   projectId,
   taskId,
   message,
+  actorMessage,
   io,
 }) => {
-  const recipients = [
-    ...new Set(
-      recipientIds
-        .map(String)
-        .filter((recipientId) => recipientId !== String(actorId)),
-    ),
+  const actor = String(actorId);
+  const recipients = [...new Set(recipientIds.map(String))].filter(
+    (recipientId) => recipientId !== actor,
+  );
+  const notificationRecipients = [
+    ...recipients.map((recipient) => ({ recipient, message })),
+    ...(actorMessage ? [{ recipient: actor, message: actorMessage }] : []),
   ];
 
-  if (!recipients.length) return [];
+  if (!notificationRecipients.length) return [];
 
   const notifications = await Notification.insertMany(
-    recipients.map((recipient) => ({
+    notificationRecipients.map(({ recipient, message: recipientMessage }) => ({
       recipient,
       project: projectId,
       task: taskId,
-      message,
+      message: recipientMessage,
     })),
   );
 
