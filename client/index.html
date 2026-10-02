@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f4ef" />
+    <meta name="description" content="Plan work together with NexaOps." />
+    <title>NexaOps | Project workspace</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html">Nexa<span>Ops</span></a>
+      <div class="account" id="account-actions">
+        <a href="login.html">Sign in</a
+        ><a class="button" href="register.html">Create account</a>
+      </div>
+    </header>
+    <main class="workspace">
+      <aside class="sidebar">
+        <p class="eyebrow">WORKSPACE</p>
+        <button class="nav-item selected" type="button">
+          Projects <span id="project-count">0</span>
+        </button>
+        <button class="nav-item" type="button" id="new-project">
+          + New project
+        </button>
+        <div class="sidebar-footer">
+          <span class="presence"></span
+          ><span id="connection-state">Offline</span>
+        </div>
+      </aside>
+      <section class="main-panel">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">YOUR WORKSPACE</p>
+            <h1>Projects</h1>
+            <p class="subheading">
+              A clear view of what the team is moving forward.
+            </p>
+          </div>
+        </div>
+        <section
+          id="notification-panel"
+          class="notification-panel"
+          hidden
+          aria-live="polite"
+        ></section>
+        <div id="project-list" class="project-list" aria-live="polite">
+          <p class="empty-state">Sign in to load your projects.</p>
+        </div>
+        <section id="board" class="board-section" hidden>
+          <div class="board-heading">
+            <div>
+              <p class="eyebrow">PROJECT BOARD</p>
+              <h2 id="board-title"></h2>
+            </div>
+            <div class="board-actions">
+              <button class="quiet-button" id="invite-member" type="button">
+                Invite member</button
+              ><button class="button" id="new-task" type="button">
+                Add task
+              </button>
+            </div>
+          </div>
+          <div class="task-columns" id="task-columns"></div>
+          <section class="comments" id="comments-panel" hidden>
+            <h3>Task conversation</h3>
+            <div id="comment-list"></div>
+            <form id="comment-form">
+              <input
+                id="comment-input"
+                maxlength="2000"
+                placeholder="Write a comment"
+                required
+              /><button class="button" type="submit">Send</button>
+            </form>
+          </section>
+        </section>
+      </section>
+    </main>
+    <dialog id="project-dialog">
+      <form id="project-form">
+        <h2>New project</h2>
+        <label>Project name<input name="name" required maxlength="100" /></label
+        ><label
+          >Description<textarea name="description" rows="3"></textarea>
+        </label>
+        <div class="dialog-actions">
+          <button class="quiet-button" type="button" data-close>Cancel</button
+          ><button class="button" type="submit">Create project</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="task-dialog">
+      <form id="task-form">
+        <h2>New task</h2>
+        <label>Task title<input name="title" required maxlength="160" /></label
+        ><label
+          >Description<textarea name="description" rows="3"></textarea></label
+        ><label
+          >Assignee<select name="assignee" id="task-assignee">
+            <option value="">Unassigned</option>
+          </select></label
+        ><label
+          >Priority<select name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select></label
+        >
+        <div class="dialog-actions">
+          <button class="quiet-button" type="button" data-close>Cancel</button
+          ><button class="button" type="submit">Create task</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/workspace.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

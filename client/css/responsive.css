@@ -1,0 +1,49 @@
+@media (max-width: 760px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 13px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+  }
+  .sidebar .eyebrow {
+    grid-column: 1/-1;
+    margin-bottom: 0;
+  }
+  .sidebar-footer {
+    margin: 0;
+    grid-column: 1/-1;
+    padding: 3px 10px;
+  }
+  .main-panel {
+    padding-top: 32px;
+  }
+  .task-columns {
+    grid-template-columns: 1fr;
+  }
+  .page-heading h1 {
+    font-size: 29px;
+  }
+}
+@media (max-width: 430px) {
+  .account {
+    gap: 10px;
+  }
+  .account .button {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+  .project-list {
+    grid-template-columns: 1fr;
+  }
+  .comments form {
+    align-items: stretch;
+  }
+  .comments input {
+    min-width: 0;
+  }
+}
