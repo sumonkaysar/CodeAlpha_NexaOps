@@ -1,4 +1,4 @@
-const API = "http://localhost:5100/api";
+const API = "https://nexaops-server.vercel.app/api";
 const tokenKey = "nexaops_token";
 let activeProject = null;
 let activeTask = null;
