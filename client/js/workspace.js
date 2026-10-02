@@ -1,9 +1,11 @@
 async function loadProjects() {
   const list = document.getElementById("project-list");
   if (!list || !localStorage.getItem(tokenKey)) return;
+
   try {
     const projects = await request("/projects");
     document.getElementById("project-count").textContent = projects.length;
+
     list.innerHTML = projects.length
       ? projects
           .map(
@@ -17,6 +19,7 @@ async function loadProjects() {
           )
           .join("")
       : '<p class="empty-state">No projects yet. Create one to get started.</p>';
+
     list
       .querySelectorAll("[data-project]")
       .forEach((button) =>
@@ -35,6 +38,7 @@ async function openProject(id) {
     request(`/projects/${id}`),
     request(`/tasks?project=${encodeURIComponent(id)}`),
   ]);
+
   document.getElementById("board").hidden = false;
   document.getElementById("board-title").textContent = project.name;
   document.getElementById("task-assignee").innerHTML =
@@ -49,8 +53,11 @@ async function openProject(id) {
           `,
       )
       .join("");
+
   renderTasks(tasks);
+
   socket?.emit("project:join", id);
+
   document
     .getElementById("board")
     .scrollIntoView({ behavior: "smooth", block: "start" });
@@ -58,6 +65,7 @@ async function openProject(id) {
 
 function renderTasks(tasks) {
   const columns = document.getElementById("task-columns");
+
   const statusOptions = (task) => `
     <select aria-label="Task status" data-status="${task._id}">
       <option value="todo" ${task.status === "todo" ? "selected" : ""}>
@@ -74,6 +82,7 @@ function renderTasks(tasks) {
       </option>
     </select>
   `;
+
   columns.innerHTML = ["todo", "in-progress", "done"]
     .map(
       (status) => `
@@ -98,6 +107,7 @@ function renderTasks(tasks) {
       `,
     )
     .join("");
+
   columns.querySelectorAll("[data-status]").forEach((select) =>
     select.addEventListener("change", async () => {
       await request(`/tasks/${select.dataset.status}`, {
@@ -106,6 +116,7 @@ function renderTasks(tasks) {
       });
     }),
   );
+
   columns.querySelectorAll("[data-task]").forEach((card) =>
     card.addEventListener("click", (event) => {
       if (!event.target.matches("select")) openComments(card.dataset.task);
@@ -123,6 +134,7 @@ async function refreshTasks() {
 async function loadNotifications() {
   const panel = document.getElementById("notification-panel");
   const notifications = await request("/notifications");
+
   panel.innerHTML = notifications.length
     ? `
       <p class="eyebrow">RECENT ACTIVITY</p>
@@ -145,6 +157,7 @@ async function openComments(taskId) {
   const panel = document.getElementById("comments-panel");
   panel.hidden = false;
   const comments = await request(`/tasks/${taskId}/comments`);
+
   document.getElementById("comment-list").innerHTML =
     comments
       .map(

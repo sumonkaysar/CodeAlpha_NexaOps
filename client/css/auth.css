@@ -4,6 +4,7 @@
   place-items: center;
   padding: 24px;
 }
+
 .auth-form {
   width: min(100%, 410px);
   display: grid;
@@ -12,10 +13,12 @@
   background: var(--paper);
   border: 1px solid var(--line);
 }
+
 .auth-form h1 {
   font-size: 28px;
   margin-bottom: 4px;
 }
+
 .auth-form label,
 dialog label {
   display: grid;
@@ -23,39 +26,47 @@ dialog label {
   font-size: 13px;
   font-weight: 600;
 }
+
 .auth-form p {
   font-size: 13px;
   color: var(--muted);
   margin: 0;
 }
+
 .auth-form a {
   color: var(--green);
 }
+
 dialog {
   border: 1px solid var(--line);
   padding: 25px;
   width: min(92vw, 440px);
   background: var(--paper);
 }
+
 dialog::backdrop {
   background: #1f2b2480;
 }
+
 dialog form {
   display: grid;
   gap: 14px;
 }
+
 dialog h2 {
   font:
     700 21px Manrope,
     sans-serif;
   margin: 0;
 }
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: 9px;
   margin-top: 5px;
 }
+
 .quiet-button {
   background: transparent;
   border: 1px solid var(--line);

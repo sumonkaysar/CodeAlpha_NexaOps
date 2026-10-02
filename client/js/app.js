@@ -1,18 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
   const authForm = document.getElementById("auth-form");
+
   authForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(authForm));
+
     try {
       if (authForm.dataset.mode === "register")
         await request("/auth/register", {
           method: "POST",
           body: JSON.stringify(data),
         });
+
       const result = await request("/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
       });
+
       localStorage.setItem(tokenKey, result.token);
       location.href = "index.html";
     } catch (error) {
@@ -21,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const token = localStorage.getItem(tokenKey);
+
   if (token && document.getElementById("project-list")) {
     document.getElementById("account-actions").innerHTML = `
       <button class="quiet-button" id="notifications" type="button">
@@ -30,32 +35,43 @@ document.addEventListener("DOMContentLoaded", () => {
         Sign out
       </button>
     `;
+
     document.getElementById("logout").addEventListener("click", () => {
       localStorage.removeItem(tokenKey);
       location.reload();
     });
+
     loadProjects();
     loadNotifications();
+
     document.getElementById("notifications").addEventListener("click", () => {
       const panel = document.getElementById("notification-panel");
       panel.hidden = !panel.hidden;
     });
+
     if (window.io) {
-      socket = window.io("http://localhost:5100", { auth: { token } });
+      socket = window.io("https://nexaops-server.vercel.app", {
+        auth: { token },
+      });
+
       socket.on("connect", () => {
         document.getElementById("connection-state").textContent = "Live";
         document.querySelector(".presence")?.classList.add("online");
       });
+
       socket.on("disconnect", () => {
         document.getElementById("connection-state").textContent = "Offline";
         document.querySelector(".presence")?.classList.remove("online");
       });
+
       ["task:created", "task:updated", "task:deleted"].forEach((eventName) =>
         socket.on(eventName, refreshTasks),
       );
+
       socket.on("comment:created", (comment) => {
         if (activeTask === comment.task) openComments(activeTask);
       });
+
       socket.on("notification:new", (notification) => {
         const panel = document.getElementById("notification-panel");
         panel.hidden = false;
@@ -67,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const projectDialog = document.getElementById("project-dialog");
+
   document
     .getElementById("new-project")
     ?.addEventListener("click", () => projectDialog.showModal());

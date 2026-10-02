@@ -18,16 +18,19 @@ async function request(path, options = {}) {
       ...(options.headers || {}),
     },
   });
+
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || "Request failed");
   }
+
   return response.status === 204 ? null : response.json();
 }
 
 async function uploadImage(file) {
   const formData = new FormData();
   formData.append("image", file);
+
   return request("/uploads/image", {
     method: "POST",
     body: formData,
@@ -52,6 +55,7 @@ function showToast(message) {
   toast.textContent = message;
   toast.hidden = false;
   window.clearTimeout(toastTimeout);
+
   toastTimeout = window.setTimeout(() => {
     toast.hidden = true;
   }, 2600);
@@ -64,18 +68,23 @@ function showConfirm(message) {
 
     const content = document.createElement("div");
     content.className = "app-confirm-content";
+
     const title = document.createElement("h2");
     title.id = "app-confirm-title";
     title.textContent = "Confirm action";
     dialog.setAttribute("aria-labelledby", title.id);
+
     const description = document.createElement("p");
     description.textContent = message;
+
     const actions = document.createElement("div");
     actions.className = "app-confirm-actions";
+
     const cancel = document.createElement("button");
     cancel.className = "quiet-button";
     cancel.type = "button";
     cancel.textContent = "Cancel";
+
     const confirm = document.createElement("button");
     confirm.className = "button";
     confirm.type = "button";
@@ -86,6 +95,7 @@ function showConfirm(message) {
     dialog.addEventListener("click", (event) => {
       if (event.target === dialog) dialog.close("cancel");
     });
+
     dialog.addEventListener(
       "close",
       () => {

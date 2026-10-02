@@ -13,13 +13,16 @@ const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || true }));
 app.use(express.json({ limit: "1mb" }));
+
 app.use("/api/auth", AuthRouter);
 app.use("/api/projects", ProjectRouter);
 app.use("/api/tasks", TaskRouter);
 app.use("/api/tasks", CommentRouter);
 app.use("/api/notifications", NotificationRouter);
 app.use("/api/uploads", UploadRouter);
+
 app.get("/", (_req, res) => res.json({ name: "NexaOps API", status: "ready" }));
+
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 

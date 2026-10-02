@@ -13,6 +13,7 @@ const io = new Server(server, {
 });
 
 app.set("io", io);
+
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth && socket.handshake.auth.token;
@@ -23,6 +24,7 @@ io.use((socket, next) => {
     next(new Error("Invalid or expired token"));
   }
 });
+
 io.on("connection", (socket) => {
   if (socket.user && socket.user.id) socket.join(`user:${socket.user.id}`);
   socket.on("project:join", async (projectId, callback = () => {}) => {
@@ -33,10 +35,14 @@ io.on("connection", (socket) => {
         _id: projectId,
         $or: [{ owner: socket.user.id }, { members: socket.user.id }],
       });
+
       if (!project) return callback({ error: "Project not found" });
+
       for (const room of socket.rooms)
         if (room.startsWith("project:")) await socket.leave(room);
+
       socket.join(`project:${projectId}`);
+
       callback({ projectId });
     } catch (_error) {
       callback({ error: "Could not join project" });
