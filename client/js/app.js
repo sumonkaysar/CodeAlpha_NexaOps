@@ -28,8 +28,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (token && document.getElementById("account-actions")) {
     document.getElementById("account-actions").innerHTML = `
-      <a class="quiet-button" id="notifications" href="notifications.html">
+      <a
+        class="quiet-button notification-link"
+        id="notifications"
+        href="notifications.html"
+      >
         Notifications
+        <span class="notification-indicator" aria-hidden="true" hidden></span>
       </a>
       ${
         document.getElementById("project-list")
@@ -47,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (document.getElementById("project-list")) loadProjects();
+    refreshUnreadNotificationCount().catch((error) => showToast(error.message));
 
     if (window.io) {
       socket = window.io("https://nexaops-server.vercel.app", {
@@ -66,6 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       socket.on("notification:new", (notification) => {
+        changeUnreadNotificationCount(1);
         showToast(notification.message);
         document.dispatchEvent(
           new CustomEvent("notification:new", { detail: notification }),

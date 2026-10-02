@@ -4,6 +4,8 @@ let activeProject = null;
 let activeTask = null;
 let socket = null;
 let toastTimeout;
+let unreadNotificationCount = null;
+let unreadNotificationRevision = 0;
 
 async function request(path, options = {}) {
   const response = await fetch(`${API}${path}`, {
@@ -35,6 +37,53 @@ async function uploadImage(file) {
     method: "POST",
     body: formData,
   });
+}
+
+function renderNotificationIndicator() {
+  const link = document.getElementById("notifications");
+  if (!link || unreadNotificationCount === null) return;
+
+  let indicator = link.querySelector(".notification-indicator");
+  if (!indicator) {
+    indicator = document.createElement("span");
+    indicator.className = "notification-indicator";
+    indicator.setAttribute("aria-hidden", "true");
+    link.append(indicator);
+  }
+
+  const hasUnread = unreadNotificationCount > 0;
+  link.classList.toggle("has-unread", hasUnread);
+  link.setAttribute(
+    "aria-label",
+    hasUnread
+      ? `Notifications, ${unreadNotificationCount} unread`
+      : "Notifications",
+  );
+  link.title = hasUnread
+    ? `${unreadNotificationCount} unread notification${unreadNotificationCount === 1 ? "" : "s"}`
+    : "Notifications";
+  indicator.hidden = !hasUnread;
+}
+
+async function refreshUnreadNotificationCount() {
+  const revision = unreadNotificationRevision;
+  const result = await request("/notifications/unread-count");
+  if (revision !== unreadNotificationRevision) return;
+
+  unreadNotificationCount = Number(result.count) || 0;
+  renderNotificationIndicator();
+}
+
+function changeUnreadNotificationCount(change) {
+  unreadNotificationRevision += 1;
+
+  if (unreadNotificationCount === null) {
+    refreshUnreadNotificationCount().catch((error) => showToast(error.message));
+    return;
+  }
+
+  unreadNotificationCount = Math.max(0, unreadNotificationCount + change);
+  renderNotificationIndicator();
 }
 
 function showMessage(message) {

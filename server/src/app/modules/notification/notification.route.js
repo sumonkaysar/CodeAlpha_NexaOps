@@ -4,6 +4,7 @@ const controller = require("./notification.controller");
 
 router.use(auth);
 
+router.get("/unread-count", controller.unreadCount);
 router.get("/", controller.list);
 router.patch("/:id/read", controller.markRead);
 

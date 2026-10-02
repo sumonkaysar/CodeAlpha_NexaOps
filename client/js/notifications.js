@@ -105,6 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
           { method: "PATCH" },
         );
         const item = button.closest(".notification-item");
+        if (item.classList.contains("is-unread"))
+          changeUnreadNotificationCount(-1);
         item.classList.remove("is-unread");
         item.querySelector(".notification-copy time").dateTime =
           notification.createdAt;

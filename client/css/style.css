@@ -230,6 +230,25 @@ a {
   text-decoration: none;
 }
 
+.notification-link {
+  position: relative;
+}
+
+.notification-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--paper);
+  border-radius: 50%;
+  background: var(--coral);
+}
+
+.notification-indicator[hidden] {
+  display: none;
+}
+
 .button {
   border: 0;
   background: var(--green);

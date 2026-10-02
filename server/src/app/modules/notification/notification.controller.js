@@ -1,5 +1,13 @@
 const Notification = require("./notification.model");
 
+exports.unreadCount = async (req, res) => {
+  const count = await Notification.countDocuments({
+    recipient: req.user.id,
+    readAt: null,
+  });
+  res.json({ count });
+};
+
 exports.list = async (req, res) => {
   res.json(
     await Notification.find({ recipient: req.user.id })
