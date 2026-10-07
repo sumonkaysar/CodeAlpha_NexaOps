@@ -16,56 +16,32 @@ The NexaOps frontend is a static HTML/CSS/JavaScript dashboard. It calls the Nex
 2. The current API URL and Socket.IO host are `https://nexaops-server.vercel.app`. Change the `API` constant in `js/common.js` to `http://localhost:5000/api` and the `window.io(...)` server URL in `js/app.js` to `http://localhost:5000`.
 3. Serve this directory, for example with `python -m http.server 5500`, and open `http://localhost:5500`. Register/sign in before accessing protected views.
 
+## Configuration
+
+The browser's REST API base URL is the `API` constant in `js/common.js`; the Socket.IO origin is specified in `js/app.js`. When developing locally, update both so HTTP and realtime traffic use the same backend. The client loads the Socket.IO browser library from the Socket.IO CDN.
+
 ## Links
 
 - **Live client:** No client deployment URL is configured in the repository.
-- **Live API:** [https://nexaops-server.vercel.app](https://nexaops-server.vercel.app)
+- **Live API and Socket.IO:** [https://nexaops-server.vercel.app](https://nexaops-server.vercel.app)
 - **GitHub:** [sumonkaysar/CodeAlpha_NexaOps](https://github.com/sumonkaysar/CodeAlpha_NexaOps)
 
-## REST API
+## Backend integration
 
-Base URL is `http://localhost:5000/api` locally, or `https://nexaops-server.vercel.app/api` for the hosted server. Except for registration and login, the routes below require `Authorization: Bearer <token>`. JSON responses are returned for successful reads and writes; deletion responds with `204 No Content`. Invalid requests use a JSON `message` or `error`.
+The REST API and Socket.IO event contracts—including request bodies, response payloads, access rules, and event directions—are documented in [`../server/README.md`](../server/README.md). Sign in before using protected views; both API calls and the socket handshake use the same JWT.
 
-| Method | Path | Request / response |
-|---|---|---|
-| `POST` | `/auth/register` | `{ "name": "Sam", "email": "sam@example.com", "password": "..." }`; creates an account and returns the public user object. |
-| `POST` | `/auth/login` | `{ "email": "sam@example.com", "password": "..." }`; returns `{ "token": "...", "user": { "id": "...", "name": "...", "email": "..." } }`. |
-| `GET` | `/projects` | Lists projects the current user owns or belongs to. |
-| `POST` | `/projects` | `{ "name": "Website refresh", "description": "..." }`; creates a project and returns it (`201`). |
-| `GET` | `/projects/:id` | Gets an accessible project. |
-| `PATCH` | `/projects/:id` | Updates project fields; returns the updated project. |
-| `DELETE` | `/projects/:id` | Deletes an accessible project; `204`. |
-| `POST` | `/projects/:id/members` | `{ "email": "member@example.com" }`; owner-only, adds an existing account and returns the populated project. |
-| `GET` | `/tasks?project=:id` | Lists tasks for an accessible project. |
-| `POST` | `/tasks` | `{ "project": "<project-id>", "title": "Plan release", "description": "...", "priority": "medium", "assignee": null, "dueDate": null }`; creates and returns the task (`201`). |
-| `PATCH` | `/tasks/:id` | Updates any provided `title`, `description`, `status`, `priority`, `assignee`, or `dueDate`; returns the updated task. |
-| `DELETE` | `/tasks/:id` | Deletes a task; `204`. |
-| `GET` | `/tasks/:taskId/comments` | Lists comments for a task. |
-| `POST` | `/tasks/:taskId/comments` | `{ "body": "Looks good" }`; creates a comment and returns it. |
-| `DELETE` | `/tasks/:taskId/comments/:commentId` | Deletes the current user's comment; `204`. |
-| `GET` | `/notifications` | Returns the current user's latest notifications (up to 50). |
-| `GET` | `/notifications/unread-count` | Returns `{ "count": 0 }`. |
-| `PATCH` | `/notifications/:id/read` | Marks a notification as read; returns the updated notification. |
-| `POST` | `/uploads/image` | Authenticated multipart image upload; returns `{ "message": "Image uploaded successfully", "url": "...", "publicId": "..." }`. |
+## Local development tips
 
-Project/task bodies are validated by the corresponding feature handlers. Check those route/controller modules for required fields if extending the client.
+- Serve this folder using a static HTTP server, not the `file:` protocol.
+- Keep the client origin in the server's `CLIENT_ORIGIN` environment variable aligned with the origin used by the static server.
+- Register/sign in, create or join a project, then open the workspace in multiple browser sessions to exercise live updates.
 
-## Socket.IO
+## Troubleshooting
 
-Connect to the server origin (not `/api`) with the token in the handshake:
+- If sign-in works but live updates do not, verify the Socket.IO origin in `js/app.js` and browser console connection errors.
+- If the API returns CORS errors, check `CLIENT_ORIGIN` in `server/.env` against the exact scheme, host, and port of the client.
+- Reauthenticate if a socket connection is rejected because its JWT is missing or expired.
 
-```js
-const socket = io("http://localhost:5000", {
-  auth: { token: "<JWT>" },
-});
-```
+## Browser support
 
-| Event | Direction | Payload / behavior |
-|---|---|---|
-| `project:join` | Client → server | Send the project ID and optional acknowledgement callback. The server checks membership, switches the socket into `project:<id>`, and acknowledges `{ "projectId": "..." }` or `{ "error": "..." }`. |
-| `task:created`, `task:updated`, `task:deleted` | Server → project room | Task changes are broadcast to members in the project's room; deleted payload contains `taskId`. |
-| `comment:created` | Server → project room | Broadcasts the created comment. |
-| `project:updated`, `project:deleted` | Server → project room | Broadcasts project changes to project members. |
-| `notification:new` | Server → user room | Delivers a new notification to the recipient's authenticated user room. |
-
-Socket connections require the same valid JWT as the REST API. The server validates project membership before allowing a socket to join a project room.
+Use a modern browser with JavaScript, Fetch, and Socket.IO support. External CDN resources and Google Fonts require network connectivity.

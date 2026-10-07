@@ -30,3 +30,19 @@ server/
 ```
 
 See [`server/README.md`](server/README.md) for installation and [`client/README.md`](client/README.md) for REST and socket contracts.
+
+## Local development
+
+Run MongoDB, start the API with `PORT=5000`, and serve the static client on `http://localhost:5500`. Configure the allowed client origin on the server and update the client's API and Socket.IO origins to match the local API.
+
+## Realtime behavior
+
+The Socket.IO server authenticates connections with the same JWT used by HTTP requests. Project membership is verified before sockets join project rooms. Project/task changes, comments, and notifications are broadcast to their appropriate project or user room.
+
+## Environment and data
+
+MongoDB stores accounts, projects, tasks, comments, and notifications. Cloudinary is used for uploaded images. Keep the JWT secret and Cloudinary credentials private and use a dedicated database for local development.
+
+## Limitations
+
+The repository does not configure a separate live client URL. A production deployment needs a compatible long-running Node/Socket.IO host; verify the hosting platform supports WebSockets before relying on realtime updates.
