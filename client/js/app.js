@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const authForm = document.getElementById("auth-form");
+  if (new URLSearchParams(location.search).get("session") === "expired")
+    showMessage("Your session expired. Please sign in again.");
 
   authForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -17,14 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(data),
       });
 
-      localStorage.setItem(tokenKey, result.token);
+      setToken(result.token);
       location.href = "index.html";
     } catch (error) {
       showMessage(error.message);
     }
   });
 
-  const token = localStorage.getItem(tokenKey);
+  const token = getToken();
 
   if (token && document.getElementById("account-actions")) {
     document.getElementById("account-actions").innerHTML = `
@@ -47,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     document.getElementById("logout").addEventListener("click", () => {
-      localStorage.removeItem(tokenKey);
+      clearToken();
       location.reload();
     });
 
@@ -57,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.io) {
       socket = window.io("https://nexaops-server.vercel.app", {
         auth: { token },
+        withCredentials: true,
       });
 
       socket.on("connect", () => {
@@ -69,6 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const connectionState = document.getElementById("connection-state");
         if (connectionState) connectionState.textContent = "Offline";
         document.querySelector(".presence")?.classList.remove("online");
+      });
+
+      socket.on("connect_error", (error) => {
+        if (/invalid or expired token/i.test(error.message)) {
+          clearToken();
+          location.href = "login.html?session=expired";
+        }
       });
 
       socket.on("notification:new", (notification) => {

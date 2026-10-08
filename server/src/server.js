@@ -9,7 +9,7 @@ const Project = require("./app/modules/project/project.model");
 const PORT = process.env.PORT || 5100;
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_ORIGIN || true },
+  cors: { origin: process.env.CLIENT_ORIGIN || true, credentials: true },
 });
 
 app.set("io", io);

@@ -33,6 +33,10 @@ dialog label {
   margin: 0;
 }
 
+.auth-form #form-message {
+  color: #c62828;
+}
+
 .auth-form a {
   color: var(--green);
 }

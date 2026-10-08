@@ -1,6 +1,6 @@
 async function loadProjects() {
   const list = document.getElementById("project-list");
-  if (!list || !localStorage.getItem(tokenKey)) return;
+  if (!list || !getToken()) return;
 
   try {
     const projects = await request("/projects");

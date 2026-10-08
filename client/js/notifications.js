@@ -58,7 +58,7 @@ async function loadNotificationsPage() {
   const list = document.getElementById("notifications-list");
   if (!list) return;
 
-  if (!localStorage.getItem(tokenKey)) {
+  if (!getToken()) {
     list.innerHTML = `
       <p class="empty-state">
         Sign in to view your notifications.

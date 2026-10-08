@@ -1,5 +1,34 @@
 const API = "https://nexaops-server.vercel.app/api";
-const tokenKey = "nexaops_token";
+const tokenCookieName = "nexaops_token";
+localStorage.removeItem(tokenCookieName);
+
+function getToken() {
+  const prefix = `${tokenCookieName}=`;
+  const cookie = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(prefix));
+  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+}
+
+function setToken(token) {
+  document.cookie = `${tokenCookieName}=${encodeURIComponent(token)}; Path=/; Max-Age=43200; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+}
+
+function clearToken() {
+  document.cookie = `${tokenCookieName}=; Path=/; Max-Age=0; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+  localStorage.removeItem(tokenCookieName);
+}
+
+function handleAuthenticationFailure(response, body) {
+  if (
+    (response.status === 401 || response.status === 403) &&
+    /invalid|expired/i.test(body.message || body.error || "")
+  ) {
+    clearToken();
+    if (!/\/(login|register)\.html$/i.test(location.pathname))
+      location.href = "login.html?session=expired";
+  }
+}
 let activeProject = null;
 let activeTask = null;
 let socket = null;
@@ -10,19 +39,19 @@ let unreadNotificationRevision = 0;
 async function request(path, options = {}) {
   const response = await fetch(`${API}${path}`, {
     ...options,
+    credentials: "include",
     headers: {
       ...(options.body instanceof FormData
         ? {}
         : { "Content-Type": "application/json" }),
-      ...(localStorage.getItem(tokenKey)
-        ? { Authorization: `Bearer ${localStorage.getItem(tokenKey)}` }
-        : {}),
+      ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
       ...(options.headers || {}),
     },
   });
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    handleAuthenticationFailure(response, body);
     throw new Error(body.message || "Request failed");
   }
 
